@@ -78,26 +78,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Buscar dados adicionais do usuário na tabela usuarios
   const fetchUserData = async (userId: string): Promise<Partial<AuthUser>> => {
     try {
-      const { data, error } = await supabase
+      // Timeout de 3 segundos para não travar se a tabela não existir
+      const timeoutPromise = new Promise<null>((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout')), 3000)
+      );
+      
+      const queryPromise = supabase
         .from('usuarios')
         .select('empresa_id, nome, perfil:perfis(nome)')
         .eq('id', userId)
         .single();
       
-      if (error || !data) {
-        // Se não existir na tabela usuarios, retornar dados básicos
-        return {};
+      const result = await Promise.race([queryPromise, timeoutPromise]);
+      
+      if (!result || 'error' in result && result.error) {
+        // Se não existir na tabela usuarios ou timeout, retornar dados básicos
+        return { perfil: 'Administrador' }; // Todos são admin por padrão
       }
       
-      const userData = data as unknown as UsuarioData;
+      const userData = (result as any).data as UsuarioData;
+      
+      if (!userData) {
+        return { perfil: 'Administrador' };
+      }
       
       return {
         empresa_id: userData.empresa_id || undefined,
         nome: userData.nome,
-        perfil: userData.perfil?.nome || 'Usuário',
+        perfil: userData.perfil?.nome || 'Administrador', // Admin por padrão
       };
     } catch {
-      return {};
+      // Em caso de erro, retornar perfil admin
+      return { perfil: 'Administrador' };
     }
   };
 
