@@ -26,14 +26,11 @@ import {
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useAuth } from '@/contexts/AuthContext';
-import { usePermission } from '@/components/auth';
-import { MENU_PERMISSIONS, Permission } from '@/lib/permissions';
 
 interface SubNavItem {
   id: string;
   label: string;
   path: string;
-  permission?: Permission;
 }
 
 interface NavItem {
@@ -44,7 +41,6 @@ interface NavItem {
   badge?: string;
   alert?: boolean;
   subItems?: SubNavItem[];
-  permission?: Permission;
 }
 
 const navItems: NavItem[] = [
@@ -86,19 +82,14 @@ const subItemIcons: Record<string, React.ElementType> = {
 export const Sidebar = () => {
   const { isDarkMode, sidebarCollapsed, toggleSidebar } = useSettingsStore();
   const { user } = useAuth();
-  const { canAny, isAdmin } = usePermission();
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['financeiro']);
   const location = useLocation();
   
   // Usar estado do store ao invés de local
   const isCollapsed = sidebarCollapsed;
   
-  // Filtrar itens do menu por permissão
-  const filteredNavItems = navItems.filter(item => {
-    const requiredPermissions = MENU_PERMISSIONS[item.id];
-    if (!requiredPermissions) return true;
-    return isAdmin || canAny(requiredPermissions);
-  });
+  // TODOS os usuários têm acesso a TODOS os menus (sem filtro de permissões)
+  const filteredNavItems = navItems;
 
   const toggleMenu = (menuId: string) => {
     setExpandedMenus(prev => 
@@ -117,7 +108,7 @@ export const Sidebar = () => {
 
   return (
     <div className={cn(
-      'fixed left-0 top-14 bottom-0 border-r flex flex-col transition-all',
+      'fixed left-0 top-14 bottom-0 border-r flex flex-col transition-all z-40',
       isCollapsed ? 'w-16' : 'w-64',
       isDarkMode ? 'bg-black border-gray-800' : 'bg-white border-gray-200'
     )}>
