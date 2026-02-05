@@ -7,7 +7,6 @@ export const useCart = () => {
     removeItem,
     updateQuantity,
     clear,
-    total,
     itemsCount,
     client,
     setClient,
