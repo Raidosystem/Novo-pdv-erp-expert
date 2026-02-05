@@ -35,9 +35,18 @@ export const PermissionGuard = ({
   const { user } = useAuth();
   const location = useLocation();
 
-  // Buscar permissões do usuário (por enquanto, admin tem tudo)
-  // TODO: Integrar com perfis reais do banco
-  const userPermissions: string[] = user?.perfil === 'Administrador' ? ['*'] : [];
+  // Se o usuário está logado, dar permissões baseadas no perfil
+  // Por padrão, usuários logados têm acesso a tudo
+  let userPermissions: string[] = [];
+  
+  if (user) {
+    if (user.perfil === 'Administrador' || !user.perfil) {
+      userPermissions = ['*'];
+    } else {
+      // TODO: Integrar com sistema de perfis do banco
+      userPermissions = ['*'];
+    }
+  }
 
   let hasAccess = false;
 
@@ -68,8 +77,20 @@ export const PermissionGuard = ({
 export const usePermission = () => {
   const { user } = useAuth();
   
-  // Por enquanto, admin tem tudo. Depois integrar com perfis reais.
-  const userPermissions: string[] = user?.perfil === 'Administrador' ? ['*'] : [];
+  // Se o usuário está logado, dar permissões baseadas no perfil
+  // Por padrão, usuários logados têm acesso a tudo (pode ajustar depois)
+  let userPermissions: string[] = [];
+  
+  if (user) {
+    if (user.perfil === 'Administrador' || !user.perfil) {
+      // Admin ou usuário sem perfil definido tem acesso total
+      userPermissions = ['*'];
+    } else {
+      // Outros perfis - por enquanto dar acesso total também
+      // TODO: Integrar com sistema de perfis do banco
+      userPermissions = ['*'];
+    }
+  }
 
   return {
     can: (permission: Permission) => hasPermission(userPermissions, permission),
