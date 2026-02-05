@@ -2,13 +2,6 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 
-// Tipos para os dados do usuário
-interface UsuarioData {
-  empresa_id: string | null;
-  nome: string;
-  perfil?: { nome: string } | null;
-}
-
 interface AuthUser extends User {
   empresa_id?: string;
   nome?: string;
@@ -85,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       const queryPromise = supabase
         .from('usuarios')
-        .select('empresa_id, nome, perfil:perfis(nome)')
+        .select('empresa_id, nome, perfis!perfil_id(nome)')
         .eq('id', userId)
         .single();
       
@@ -96,16 +89,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { perfil: 'Administrador' }; // Todos são admin por padrão
       }
       
-      const userData = (result as any).data as UsuarioData;
+      const userData = (result as any).data;
       
       if (!userData) {
         return { perfil: 'Administrador' };
       }
       
+      // O join retorna perfis como objeto ou array
+      const perfisData = userData.perfis;
+      const perfilNome = Array.isArray(perfisData) 
+        ? perfisData[0]?.nome 
+        : perfisData?.nome;
+      
       return {
         empresa_id: userData.empresa_id || undefined,
         nome: userData.nome,
-        perfil: userData.perfil?.nome || 'Administrador', // Admin por padrão
+        perfil: perfilNome || 'Administrador', // Admin por padrão
       };
     } catch {
       // Em caso de erro, retornar perfil admin

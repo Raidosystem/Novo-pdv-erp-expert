@@ -199,22 +199,20 @@ export const produtosService = {
 
   // Produtos com estoque baixo
   async getLowStock() {
+    // Buscar todos os produtos ativos e filtrar no client
+    // porque comparar duas colunas (estoque_atual <= estoque_minimo) não é suportado diretamente
     const { data, error } = await supabase
       .from('produtos')
       .select('*')
       .eq('ativo', true)
-      .filter('estoque_atual', 'lte', supabase.rpc('estoque_minimo_col'))
       .order('estoque_atual');
 
-    // Alternativa: usar raw SQL via RPC se o filtro acima não funcionar
-    if (error) {
-      const { data: dataRaw, error: errorRaw } = await supabase
-        .rpc('get_produtos_estoque_baixo');
-      if (errorRaw) throw errorRaw;
-      return dataRaw as Produto[];
-    }
-
-    return data as Produto[];
+    if (error) throw error;
+    
+    // Filtrar produtos onde estoque_atual <= estoque_minimo
+    return (data || []).filter((p: Produto) => 
+      p.estoque_atual <= p.estoque_minimo
+    ) as Produto[];
   },
 };
 
