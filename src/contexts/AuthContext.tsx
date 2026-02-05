@@ -76,9 +76,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setTimeout(() => reject(new Error('Timeout')), 3000)
       );
       
+      // Query simples sem JOIN - buscar só dados do usuário
       const queryPromise = supabase
         .from('usuarios')
-        .select('empresa_id, nome, perfis!perfil_id(nome)')
+        .select('empresa_id, nome, perfil_id')
         .eq('id', userId)
         .single();
       
@@ -95,16 +96,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { perfil: 'Administrador' };
       }
       
-      // O join retorna perfis como objeto ou array
-      const perfisData = userData.perfis;
-      const perfilNome = Array.isArray(perfisData) 
-        ? perfisData[0]?.nome 
-        : perfisData?.nome;
+      // Buscar nome do perfil separadamente se tiver perfil_id
+      let perfilNome = 'Administrador';
+      if (userData.perfil_id) {
+        const { data: perfilData } = await supabase
+          .from('perfis')
+          .select('nome')
+          .eq('id', userData.perfil_id)
+          .single();
+        perfilNome = (perfilData as { nome?: string } | null)?.nome || 'Administrador';
+      }
       
       return {
         empresa_id: userData.empresa_id || undefined,
         nome: userData.nome,
-        perfil: perfilNome || 'Administrador', // Admin por padrão
+        perfil: perfilNome,
       };
     } catch {
       // Em caso de erro, retornar perfil admin
