@@ -14,7 +14,7 @@ export const AppLayout = () => {
 
   return (
     <div className={cn(
-      'min-h-screen transition-colors duration-300',
+      'min-h-screen transition-colors duration-300 pt-14',
       isDarkMode ? 'bg-gray-950' : 'bg-gray-50'
     )}>
       <CommandBar />
