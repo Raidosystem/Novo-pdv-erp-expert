@@ -26,6 +26,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Timeout de segurança para nunca ficar travado carregando
+    const safetyTimeout = setTimeout(() => {
+      setLoading(false);
+    }, 5000);
+
     // Verificar sessão atual
     const getSession = async () => {
       try {
@@ -41,6 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         console.error('Erro ao buscar sessão:', error);
       } finally {
+        clearTimeout(safetyTimeout);
         setLoading(false);
       }
     };
@@ -64,6 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     return () => {
+      clearTimeout(safetyTimeout);
       subscription.unsubscribe();
     };
   }, []);
