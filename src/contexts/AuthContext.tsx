@@ -71,39 +71,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Buscar dados adicionais do usuário na tabela usuarios
   const fetchUserData = async (userId: string): Promise<Partial<AuthUser>> => {
     try {
-      // Timeout de 3 segundos para não travar se a tabela não existir
-      const timeoutPromise = new Promise<null>((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout')), 3000)
-      );
-      
-      // Query simples sem JOIN - buscar só dados do usuário
-      const queryPromise = supabase
+      // Usar maybeSingle() para evitar erro 406 quando usuário não existe
+      const { data, error } = await supabase
         .from('usuarios')
         .select('empresa_id, nome, perfil_id')
-        .eq('id', userId)
-        .single();
+        .eq('id', userId as never)
+        .maybeSingle();
       
-      const result = await Promise.race([queryPromise, timeoutPromise]);
+      const userData = data as { empresa_id?: string; nome?: string; perfil_id?: string } | null;
       
-      if (!result || 'error' in result && result.error) {
-        // Se não existir na tabela usuarios ou timeout, retornar dados básicos
-        return { perfil: 'Administrador' }; // Todos são admin por padrão
-      }
-      
-      const userData = (result as any).data;
-      
-      if (!userData) {
+      // Se não encontrou ou deu erro, retornar admin
+      if (error || !userData) {
+        console.log('Usuário não encontrado na tabela usuarios, usando perfil padrão');
         return { perfil: 'Administrador' };
       }
       
-      // Buscar nome do perfil separadamente se tiver perfil_id
+      // Buscar nome do perfil se tiver perfil_id
       let perfilNome = 'Administrador';
       if (userData.perfil_id) {
         const { data: perfilData } = await supabase
           .from('perfis')
           .select('nome')
-          .eq('id', userData.perfil_id)
-          .single();
+          .eq('id', userData.perfil_id as never)
+          .maybeSingle();
         perfilNome = (perfilData as { nome?: string } | null)?.nome || 'Administrador';
       }
       
