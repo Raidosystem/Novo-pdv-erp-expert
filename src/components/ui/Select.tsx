@@ -64,7 +64,7 @@ export const Select = ({
           >
             <SelectPrimitive.Viewport className="p-1">
               {options
-                .filter((option) => option.value !== '') // Filtrar opções com valor vazio
+                .filter((option) => option.value != null && option.value !== '') // Filtrar opções com valor vazio, null ou undefined
                 .map((option) => (
                 <SelectPrimitive.Item
                   key={option.value}
