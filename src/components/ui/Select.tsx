@@ -63,7 +63,9 @@ export const Select = ({
             sideOffset={4}
           >
             <SelectPrimitive.Viewport className="p-1">
-              {options.map((option) => (
+              {options
+                .filter((option) => option.value !== '') // Filtrar opções com valor vazio
+                .map((option) => (
                 <SelectPrimitive.Item
                   key={option.value}
                   value={option.value}
