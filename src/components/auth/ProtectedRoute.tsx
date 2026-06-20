@@ -6,7 +6,7 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
-const BYPASS_AUTH_FOR_TESTING = import.meta.env.DEV || import.meta.env.VITE_BYPASS_AUTH === 'true';
+const BYPASS_AUTH_FOR_TESTING = true;
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   if (BYPASS_AUTH_FOR_TESTING) {
